@@ -1,9 +1,11 @@
 # macHood
 
-https://img.shields.io/badge/Language-Python%203-blue
-https://img.shields.io/badge/Platform-macOS-lightgrey
-https://img.shields.io/badge/UI-CustomTkinter-darkgreen
-https://img.shields.io/badge/Framework-Quartz-orange
+![Python](https://img.shields.io/badge/Language-Python%203-blue)
+![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey)
+![UI](https://img.shields.io/badge/UI-CustomTkinter-darkgreen)
+![Framework](https://img.shields.io/badge/Framework-Quartz-orange)
+
+# macHood
 
 There really aren't many decent layout macros out there for mac players on Roblox. This is a straightforward script made to fix that, specifically for animation canceling and speed glitching in Da Hood. It works by rapidly spamming the i and o keys to handle zooming. 
 
