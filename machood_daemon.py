@@ -4,12 +4,18 @@ machood_daemon.py — headless macro engine
 Communicates with the Swift UI over a Unix domain socket at /tmp/machood.sock
 Protocol: newline-delimited JSON  { "cmd": "...", ...params }
 Responses: newline-delimited JSON { "event": "...", ...data }
-
 Setup: pip3 install pyobjc-framework-Quartz pynput
 Run:   python3 machood_daemon.py
 """
-
 import threading, time, json, os, socket, sys
+
+# ── Single instance guard ─────────────────────────────────────────────────────
+import fcntl
+_lock_file = open("/tmp/machood.lock", "w")
+try:
+    fcntl.flock(_lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except IOError:
+    sys.exit(0)
 
 # ── Quartz ────────────────────────────────────────────────────────────────────
 from Quartz import (
@@ -57,15 +63,19 @@ def press_key_or_scroll(key_id):
 running       = False
 lock          = threading.Lock()
 presses_count = 0
+spam_thread   = None
 
 def spam_loop(delay, keys):
     global presses_count
-    idx, nxt = 0, time.perf_counter()
+    nxt = time.perf_counter()
+    idx = 0
     while True:
         with lock:
-            if not running: break
+            if not running or threading.current_thread() is not spam_thread:
+                break
         press_key_or_scroll(keys[idx % len(keys)])
-        presses_count += 1; idx += 1
+        presses_count += 1
+        idx += 1
         nxt += delay
         rem = nxt - time.perf_counter()
         if rem > 0.002: time.sleep(rem - 0.001)
@@ -96,7 +106,7 @@ recording_hotkey = False
 recording_key    = False
 
 # Active client sockets for broadcasting events
-clients     = []
+clients      = []
 clients_lock = threading.Lock()
 
 def broadcast(msg: dict):
@@ -110,15 +120,17 @@ def broadcast(msg: dict):
 
 # ── Macro control ─────────────────────────────────────────────────────────────
 def do_toggle():
-    global running
+    global running, spam_thread
     with lock:
         running = not running
         state = running
     if state:
-        delay = 1.0 / max(1, config.get("speed", 33))
-        ids   = [e["id"] for e in key_sequence if isinstance(e.get("id"), int)] \
+        ids   = [e["id"] for e in key_sequence if e.get("id") is not None] \
                 or [KEY_CODES["i"], KEY_CODES["o"]]
-        threading.Thread(target=spam_loop, args=(delay, ids), daemon=True).start()
+        speed = max(1, config.get("speed", 33))
+        delay = 1.0 / speed
+        spam_thread = threading.Thread(target=spam_loop, args=(delay, ids), daemon=True)
+        spam_thread.start()
     broadcast({"event":"status","running":state,"presses":presses_count})
 
 # ── Input listeners ───────────────────────────────────────────────────────────
