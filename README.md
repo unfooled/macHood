@@ -67,6 +67,6 @@ And enable MacHood. Without this the macro won't be able to send keys to the gam
 
 ## Usage
 
-* Set your key sequence in the UI (defaults to `i` and `o` for zooming).
+* Add any keys you want to spam in the UI — defaults to `i` and `o` for animation canceling, but you can use scroll wheel zoom, `f`, or literally any key you want.
 * Adjust the slider to change presses per second.
 * Press your configured hotkey to toggle the macro on and off while playing.
